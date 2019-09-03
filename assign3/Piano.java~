@@ -1,0 +1,39 @@
+/*
+ * Piano.java
+ */
+
+package assign3;
+
+
+public class Piano extends Instrument{
+
+    private static InstString[][] pStrings; //2D array of strings
+    
+    public Piano(int numNotes){
+	pStrings = new InstString[numnotes][3];
+	for(int i = 0; i < strings.length; i++){
+	    pStrings[i][0] = GuitarString(440*Math.pow(2,(i-24)/12.0))-.45;
+	    pStrings[i][1] = GuitarString(440*Math.pow(2,(i-24)/12.0));
+	    pStrings[i][2] = GuitarString(440*Math.pow(2,(i-24)/12.0))+.45;
+	}
+    }
+  
+    public void playNote(int index){
+	pStrings[index][0].pluck();
+	pStrings[index][1].pluck();
+	pStrings[index][2].pluck();
+    }
+    
+    public double ringNotes(){
+	double sum = 0;
+	tic();
+	for(int i = 0; i < strings.length;  i++){
+	    sum+=pStrings[i][0].sample();
+	    sum+=pStrings[i][1].sample();
+	    sum+=pStrings[i][2].sample();
+	}
+	return sum;
+    }
+			    
+
+}

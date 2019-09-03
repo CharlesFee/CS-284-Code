@@ -1,0 +1,22 @@
+/*
+ * InstString.java
+ *
+ */
+
+package assign3;
+
+public abstract class InstString{
+
+    /* To be implemented by subclasses*/
+    public abstract void pluck();
+    public abstract void tic();
+
+    public double sample(){
+
+    }
+
+    public int time(){
+
+    }
+
+}

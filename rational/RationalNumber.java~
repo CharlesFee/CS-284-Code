@@ -1,0 +1,112 @@
+import java.lang.Number;
+import java.lang.Math;
+public class RationalNumber{
+    int numerator;
+    int denominator;
+    public RationalNumber(int p, int q){
+	if(q == 0){
+	    throw new ArithmeticException("/ by zero");
+	}else{
+	    numerator = p;
+	    denominator = q;
+	}
+    }
+    public RationalNumber(String s){
+	int x = 0;
+	int y = 0;
+	String characteristic = "";
+	String antiperiod = "";
+	String period = "";
+	for(int i = 0; i < s.length(); i++){
+	    if(s.charAt(i)=='.'){
+	        x = i;
+		characteristic = s.substring(0,x);
+	    }
+	    if(s.charAt(i)=='_'){
+		y = i;
+		antiperiod = s.substring(x+1,y);
+		period = s.substring(y+1,s.length());
+		break;
+	    }
+	    
+	}
+	int characteristicValueNum = 0;
+	int characteristicValueDen = 1;
+	int antiperiodValueNum = 0;
+	int antiperiodValueDen = 0;
+	int periodValueNum = 0;
+	int periodValueDen = 0;
+	System.out.println(characteristic);
+	System.out.println(antiperiod);
+	System.out.println(period);
+	for(int i = 0; i < characteristic.length();i++){
+	    if(characteristic.charAt(i)=='1'){
+		characteristicValueNum+= Math.pow(2,characteristic.length()-i-1);
+	    }
+	}
+	System.out.println(characteristicValueNum);
+	for(int i = 0; i < antiperiod.length();i++){
+	    if(antiperiod.charAt(i)=='1'){
+		antiperiodValueNum+= Math.pow(2,antiperiod.length()-i-1);
+	    }
+	}
+	antiperiodValueDen =(int) Math.pow(2,antiperiod.length());
+	System.out.println(antiperiodValueNum+"\\"+antiperiodValueDen);
+	for(int i = 0; i < period.length();i++){
+	    if(period.charAt(i)=='1'){
+		periodValueNum+= Math.pow(2,period.length()-i-1);
+	    }
+	}
+	periodValueDen = (int)(Math.pow(2,(period.length()))-1)*(int)Math.pow(2,(antiperiod.length()));
+	System.out.println(periodValueNum+"\\"+periodValueDen);
+	int num = ((((characteristicValueNum*antiperiodValueDen)+(characteristicValueDen*antiperiodValueNum))*periodValueDen)+(periodValueNum*characteristicValueDen*antiperiodValueDen));
+	int den = characteristicValueDen*antiperiodValueDen*periodValueDen;
+	int gcdd = gcd(num,den);
+	numerator = num/gcdd;
+	denominator = den/gcdd;
+	
+    }
+    static int gcd(int a, int b){
+	int gcd = 1;
+	for(int i = 1; i <= a && i <= b; ++i)
+        {
+            // Checks if i is a factor of both integers
+            if(a % i==0 && b % i==0)
+                gcd = i;
+        }
+	return gcd;
+    }
+    void simplify(){
+	int gcd =gcd(numerator,denominator);
+	this.numerator = numerator/gcd;
+	this.denominator = denominator/gcd;
+    }
+    void add(RationalNumber r){
+	this.numerator = (this.numerator*r.denominator)+(this.denominator*r.numerator);
+	this.denominator = this.denominator*r.denominator;
+	simplify();
+    }
+    void multiply(RationalNumber r){
+	this.numerator = this.numerator*r.numerator;
+	this.denominator = this.denominator*r.denominator;
+	simplify();
+    }
+    public boolean isEqual(RationalNumber other){
+	return this.numerator == other.numerator && this.denominator == other.denominator;
+    }
+    double truncate(double d){
+	return Math.floor(d*1e3)/1e3;
+    }
+    double doubleValue(){
+	return truncate((double)(this.numerator)/this.denominator);
+    }
+    float floatValue(){
+	return (float)truncate((double)(this.numerator)/this.denominator);
+    }
+    int intValue(){
+	return this.numerator/this.denominator;
+    }
+    long longValue(){
+	return this.numerator/this.denominator;
+    }
+}

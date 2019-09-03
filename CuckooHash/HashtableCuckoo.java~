@@ -1,0 +1,241 @@
+package CuckooHash;
+
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+
+public class HashtableCuckoo<K, V>
+        implements KWHashMap<K, V> {
+
+    
+    private Entry<K, V>[] table1;
+    private Entry<K, V>[] table2;
+    private List<Entry<K, V> > overflow;
+    private static final int START_CAPACITY = 100;
+    private double LOAD_THRESHOLD = 0.6;
+    private int tableSize=(int)(START_CAPACITY*LOAD_THRESHOLD);
+    private int numKeys;
+ 
+    public HashtableCuckoo() {
+        table1 = new Entry[tableSize];
+        table2 = new Entry[tableSize];
+        overflow = new ArrayList();
+    }
+  
+    /** Contains key-value pairs for a hash table. */
+    public static class Entry<K, V> implements Map.Entry<K, V> {
+
+        /** The key */
+        private K key;
+        /** The value */
+        private V value;
+
+        /**
+         * Creates a new key-value pair.
+         * @param key The key
+         * @param value The value
+         */
+        public Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        /**
+         * Retrieves the key.
+         * @return The key
+         */
+        @Override
+        public K getKey() {
+            return key;
+        }
+
+        /**
+         * Retrieves the value.
+         * @return The value
+         */
+        @Override
+        public V getValue() {
+            return value;
+        }
+
+        /**
+         * Sets the value.
+         * @param val The new value
+         * @return The old value
+         */
+        @Override
+        public V setValue(V val) {
+            V oldVal = value;
+            value = val;
+            return oldVal;
+        }
+
+	/**
+         * Return a String representation of the Entry
+         * @return a String representation of the Entry
+         *         in the form key = value
+         */
+        @Override
+        public String toString() {
+            return key.toString() + "," + value.toString();
+        }
+        
+    }
+
+    @Override
+    public int size() {
+	int sizerino = 0;
+	for(int i =0; i  < tableSize; i++){
+	    if(null != table1[i]){
+		sizerino++;
+	    }
+	    if(null != table2[i]){
+		sizerino++;
+	    }
+	}
+	return sizerino+overflow.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+	return size() == 0;
+    }
+
+    private int getHash(Object o, int num){
+	int hasherino = o.hashCode();
+	if(num == 0){
+	    if(hasherino%tableSize < 0){
+		return tableSize+(hasherino%tableSize);
+	    }else{
+		return hasherino%tableSize;
+	    }
+	}else if(num == 1){
+	    hasherino = hasherino<<16|hasherino>>>16;
+	    if(hasherino%tableSize < 0){
+		return tableSize+(hasherino%tableSize);
+	    }else{
+		return hasherino%tableSize;
+	    }
+	}else{
+	    return -1;
+	}
+    }
+
+    @Override
+    public V get(Object key) {
+	if(null != table1[getHash(key, 0)] && table1[getHash(key, 0)].getKey() == key){
+	    return table1[getHash(key, 0)].getValue();
+	}else if(null != table2[getHash(key, 1)] && table2[getHash(key, 1)].getKey() == key){
+	    return table2[getHash(key, 1)].getValue();
+	}else{
+	    for(int i = 0; i < overflow.size(); i++){
+		if(overflow.get(i).getKey() == key){
+		    return overflow.get(i).getValue();
+		}
+	    }
+	}
+	return null;
+    }
+  
+    @Override
+    public V put(K key, V value) {
+        Entry entryStatic = new Entry(key, value);
+	Entry entry = new Entry(key, value);
+	ArrayList visited1 = new ArrayList();
+	ArrayList visited2 = new ArrayList();
+
+	if(null== get(entry.getKey())){		
+	    while(true){
+		if(visited1.contains(getHash(entry.getKey(), 0))){
+		    overflow.add(entry);
+		    break;
+		}
+		else if(table1[getHash(entry.getKey(), 0)] == null){
+		    table1[getHash(entry.getKey(), 0)] = entry;
+		    break;
+		}else{
+		    visited1.add(getHash(entry.getKey(), 0));
+		    Entry temp = table1[getHash(entry.getKey(), 0)];
+		    table1[getHash(entry.getKey(), 0)] = entry;
+		    entry = temp;
+
+		    if(visited2.contains(getHash(entry.getKey(), 1))){
+			overflow.add(entry);
+			break;
+		    }
+		    else if(table2[getHash(entry.getKey(), 1)] == null){
+			table2[getHash(entry.getKey(), 1)] = entry;
+			break;
+			
+		    }else{
+			visited2.add(getHash(entry.getKey(), 1));
+			temp = table2[getHash(entry.getKey(), 1)];
+			table2[getHash(entry.getKey(), 1)] = entry;
+			entry = temp;
+		    }
+		}
+	    }
+	    return null;
+	}else{
+	    if(table1[getHash(entry.getKey(), 0)].getKey() == entry.getKey()){
+		table1[getHash(entry.getKey(), 0)].value = (V) entry.getValue();
+		return (V) entryStatic.getValue();
+	    }else if(table2[getHash(entry.getKey(), 1)].getKey() == entry.getKey()){
+		table2[getHash(entry.getKey(), 1)].value = (V) entry.getValue();
+		return (V) entryStatic.getValue();
+	    }else{
+		for(int i = 0; i < overflow.size(); i++){
+		    if(overflow.get(i).getKey() == entry.getKey()){
+			overflow.get(i).value = (V) entry.getValue();
+			return (V) entryStatic.getValue();
+		    }
+		}
+	    }
+	    return (V) entryStatic.getValue();
+	}
+    }
+    @Override
+    public V remove(Object key) {
+	Entry temp;
+	if(key.equals(table1[getHash(key, 0)].getKey())){
+	    temp = table1[getHash(key, 0)];
+	    table1[getHash(key, 0)] = null;
+	    return (V) temp.getValue();
+	}else if(key.equals(table2[getHash(key, 1)].getKey())){
+	    temp = table2[getHash(key, 1)];
+	    table2[getHash(key, 1)] = null;
+	    return (V) temp.getValue();
+	}else{
+	    for(int i = 0; i < overflow.size(); i++){
+		if(key.equals(overflow.get(i).getKey())){
+		    temp = overflow.get(i);
+		    overflow.remove(i);
+		    return (V) temp.getValue();
+		}
+	    }
+	}
+	return null;
+    }
+
+    @Override
+    public String toString() {
+	StringBuilder sb = new StringBuilder();
+	for(int i = 0; i < table1.length; i++){
+	    if(table1[i] != null){
+		sb.append("["+i+","+table1[i].getKey()+","+table1[i].getValue()+",table1"+"]"+"\n");
+	    }
+	}
+	for(int i = 0; i < table1.length; i++){
+	    if(table2[i] != null){
+		sb.append("["+i+","+table2[i].getKey()+","+table2[i].getValue()+",table2"+"]"+"\n");
+	    }
+	}
+	for(int i = 0; i < overflow.size(); i++){
+	    sb.append("["+i+","+overflow.get(i).getKey()+","+overflow.get(i).getValue()+",overflow"+"]"+"\n");
+	}
+	return sb.toString();
+    }
+   
+
+}

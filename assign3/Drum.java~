@@ -1,0 +1,14 @@
+/*
+ * Drum.java
+ */
+package assign3;
+
+public class Drum extends Instrument{
+
+    public Drum(int numNotes){
+	strings = new InstString[numNotes];
+	for(int i = 0; i < strings.length; i++){
+	    strings[i] = DrumString(440*Math.pow(2,(i-24)/12.0));
+	}
+    }	    
+}
